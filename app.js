@@ -140,41 +140,8 @@ const app = new Vue({
     } catch (_) { /* noop */ }
     // Cargar los códigos legibles para validación por card
     this.loadCodes();
-    // Carga el manifest local generado por scripts/make_manifest.py
-    fetch('assets/manifest.json', { cache: 'no-store' })
-      .then(r => {
-        if (!r.ok) throw new Error(`HTTP ${r.status}`);
-        return r.json();
-      })
-      .then(list => {
-        if (!Array.isArray(list)) throw new Error('Manifest inválido');
-        // Normaliza rutas: usa / y codifica espacios/caracteres
-        const norm = (p) => {
-          if (!p) return p;
-          const withSlash = p.replace(/\\\\/g, '/');
-          // encodeURI mantiene / sin codificar pero escapa espacios y otros
-          return encodeURI(withSlash);
-        };
-        this.cards = list
-          .filter(it => it && it.file)
-          .map(it => ({
-            ...it,
-            file: norm(it.file),
-            // Preparar propiedades reactivas para GIF
-            gifCandidate: this.gifPath(norm(it.file)), // ruta tentativa
-            gifFile: "", // se llenará si se verifica que existe
-            patreon: "https://www.patreon.com/example", // Test patreon link to make button visible
-            unlocked: false
-          }));
-        // Pre-carga y verificación de GIFs por cada card
-        this.preloadGifs();
-        // Revisar si existe codes_txt/<Nombre>.txt para auto-desbloquear (sólo si está habilitado)
-        if (this.enableTxtAutoUnlock) this.markUnlockedFromTxt();
-      })
-      .catch(err => {
-        this.error = `No se pudo cargar assets/manifest.json: ${err.message}`;
-        console.error(err);
-      });
+    // Carga el manifest con múltiples rutas para compatibilidad
+    this.loadManifest();
   },
   methods: {
     async loadCodes() {
@@ -193,6 +160,90 @@ const app = new Vue({
         this.codesMap = map;
       } catch (_) {
         // Ignorar si no existe el archivo
+      }
+    },
+    async loadManifest() {
+      try {
+        // Intentar cargar desde diferentes rutas para compatibilidad
+        let manifestData;
+        const possiblePaths = [
+          './assets/manifest.json',
+          'assets/manifest.json',
+          '/assets/manifest.json'
+        ];
+        
+        for (const path of possiblePaths) {
+          try {
+            const response = await fetch(path, { cache: 'no-store' });
+            if (response.ok) {
+              manifestData = await response.json();
+              console.log(`Manifest cargado desde: ${path}`);
+              break;
+            }
+          } catch (e) {
+            console.warn(`No se pudo cargar desde ${path}:`, e.message);
+          }
+        }
+        
+        if (!manifestData) {
+          throw new Error('No se pudo cargar el manifest desde ninguna ruta');
+        }
+        
+        if (!Array.isArray(manifestData)) {
+          throw new Error('Manifest inválido - no es un array');
+        }
+        
+        // Normalizar rutas para GitHub Pages
+        const basePath = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' 
+          ? './' 
+          : './';
+          
+        // Normaliza rutas: usa / y codifica espacios/caracteres
+        const norm = (p) => {
+          if (!p) return p;
+          const withSlash = p.replace(/\\\\/g, '/');
+          // encodeURI mantiene / sin codificar pero escapa espacios y otros
+          return encodeURI(withSlash);
+        };
+        
+        this.cards = manifestData
+          .filter(it => it && it.file)
+          .map(it => ({
+            ...it,
+            file: norm(it.file),
+            // Preparar propiedades reactivas para GIF
+            gifCandidate: this.gifPath(norm(it.file)), // ruta tentativa
+            gifFile: "", // se llenará si se verifica que existe
+            patreon: "https://www.patreon.com/example", // Test patreon link to make button visible
+            unlocked: false
+          }));
+          
+        console.log(`${this.cards.length} cards cargadas correctamente`);
+        
+        // Pre-carga y verificación de GIFs por cada card
+        this.preloadGifs();
+        // Revisar si existe codes_txt/<Nombre>.txt para auto-desbloquear (sólo si está habilitado)
+        if (this.enableTxtAutoUnlock) this.markUnlockedFromTxt();
+        
+      } catch (error) {
+        console.error("Error cargando manifest:", error);
+        this.error = `Error cargando contenido: ${error.message}`;
+        
+        // Fallback: mostrar cards de ejemplo para debugging
+        this.cards = [
+          {
+            id: 'debug-1',
+            name: "Card de prueba",
+            scene: "Escena de prueba",
+            photos: 10,
+            videos: 5,
+            file: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='320'%3E%3Crect width='100%25' height='100%25' fill='%23333'/%3E%3Ctext x='50%25' y='50%25' text-anchor='middle' fill='white'%3ECard de prueba%3C/text%3E%3C/svg%3E",
+            gifFile: null,
+            patreon: null,
+            unlocked: true
+          }
+        ];
+        console.log('Usando card de fallback para debugging');
       }
     },
     markUnlockedFromTxt() {
@@ -516,3 +567,16 @@ const app = new Vue({
     }
   }
 });
+
+// DEBUG: Mostrar info en pantalla para móvil
+setTimeout(() => {
+  const debugInfo = document.createElement('div');
+  debugInfo.style.cssText = 'position:fixed;top:10px;left:10px;background:red;color:white;padding:10px;z-index:9999;font-size:12px;max-width:300px;';
+  debugInfo.innerHTML = `
+    Cards: ${app.cards.length}<br>
+    URL: ${window.location.href}<br>
+    UserAgent: ${navigator.userAgent.substring(0,50)}<br>
+    Error: ${app.error || 'Ninguno'}
+  `;
+  document.body.appendChild(debugInfo);
+}, 2000);

@@ -957,3 +957,93 @@ h1 + p, p + p { margin-top: 10px; }
     animation: none !important;
   }
 }
+
+/* ================================
+   MOBILE FIXES - Forzar visibilidad
+   ================================ */
+
+/* Para TODOS los dispositivos móviles y táctiles */
+@media screen and (max-width: 768px), (hover: none) {
+  /* Forzar que las cards sean visibles sin hover */
+  .card-info {
+    transform: translateY(0%) !important;
+    transition: none !important;
+  }
+  
+  .card-info p {
+    opacity: 1 !important;
+    transition: none !important;
+  }
+  
+  .card-info:after {
+    opacity: 1 !important;
+    transform: translateY(0%) !important;
+    transition: none !important;
+  }
+  
+  .metrics {
+    opacity: 1 !important;
+    transition: none !important;
+  }
+  
+  .play-btn {
+    opacity: 1 !important;
+    pointer-events: auto !important;
+  }
+  
+  /* Asegurar que las cards tengan tamaño mínimo */
+  .card {
+    min-width: 180px !important;
+    min-height: 240px !important;
+  }
+  
+  /* Contenedor más compacto */
+  .container {
+    padding: 10px !important;
+    gap: 15px !important;
+  }
+}
+
+/* Específicamente para móviles muy pequeños */
+@media screen and (max-width: 480px) {
+  .card {
+    width: calc(50vw - 20px) !important;
+    height: calc(65vw - 20px) !important;
+    max-width: 200px !important;
+    max-height: 280px !important;
+  }
+  
+  .card-info h1 {
+    font-size: 14px !important;
+  }
+  
+  .metric-value {
+    font-size: 12px !important;
+  }
+}
+
+/* Para una sola columna en pantallas muy pequeñas */
+@media screen and (max-width: 360px) {
+  .card {
+    width: calc(100vw - 40px) !important;
+    height: calc(80vw - 40px) !important;
+    max-width: 280px !important;
+    max-height: 320px !important;
+  }
+  
+  .container {
+    padding: 10px 20px !important;
+  }
+}
+
+/* Debug: Borde rojo temporal para ver si las cards existen */
+@media screen and (max-width: 768px) {
+  .card {
+    border: 2px solid red !important;
+    background-color: #444 !important;
+  }
+  
+  .card-info {
+    background-color: rgba(0,0,0,0.8) !important;
+  }
+}
