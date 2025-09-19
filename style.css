@@ -1,0 +1,917 @@
+/*
+  Hoja de estilos del efecto "Parallax Depth Cards"
+  — Comentada en detalle para que puedas ajustar fácilmente tamaños,
+    colores, sombras, transiciones y encuadre de imágenes.
+
+  Pistas rápidas de ajuste:
+  - Tamaño de la card: .card { width, height }
+  - Encaje de imagen (ver más parte superior): .card-bg { background-position }
+  - Radio de borde: .card { border-radius }
+  - Sombras y brillo: .card, .card-wrap:hover .card { box-shadow }
+  - Velocidad/curva de animación: :root { --hover-easing, --return-easing }
+  - Aparición de texto: .card-info y .card-info:after (gradiente/fade)
+*/
+
+/* ===== Utilidades: Variables y Helpers ===== */
+/* Variables CSS: ajusta las curvas de animación globales. */
+:root {
+  /* Curva/velocidad al hacer hover (entrada). Valores comunes: ease, ease-out,
+     cubic-bezier(0.23, 1, 0.32, 1) (rápida al principio, suave al final). */
+  --hover-easing: cubic-bezier(0.23, 1, 0.32, 1);
+  /* Curva/velocidad al soltar el hover (vuelta). */
+  --return-easing: cubic-bezier(0.445, 0.05, 0.55, 0.95);
+  /* Tamaños de iconos (control por icono) */
+  --icon-photo-size: 16px; /* <- cambia aquí el tamaño del icono de fotos */
+  --icon-video-size: 18px; /* <- cambia aquí el tamaño del icono de videos */
+  /* Tamaño del icono de play para GIF */
+  transition: background 0.2s var(--return-easing),
+              transform 0.2s var(--return-easing),
+              box-shadow 0.6s var(--hover-easing);
+  will-change: transform, box-shadow;
+  /* Tamaño del área clicable (hitbox) del botón Play */
+  --icon-play-hit-size: 36px; /* <- área de click amplia, independiente del svg */
+  /* ===== Control de posiciones verticales (edita aquí) ===== */
+  /* Título (slot header) */
+  --title-offset-y: -6px;        /* cuanto sube por defecto */
+  --title-hover-extra: -2px;     /* cuánto sube adicional en hover */
+  /* Banda inferior .card-info (todo el bloque) */
+  --info-initial-translate: 40%; /* posición inicial hacia abajo (sube reduciendo) */
+  --info-hover-translate: 0%;    /* posición en hover (normalmente 0%) */
+  /* Métricas (iconos+numeros) */
+  --metrics-offset-y: -2px;      /* cuanto suben por defecto */
+  --metrics-hover-extra: -1px;   /* cuánto suben adicional en hover */
+
+  /* Tamaños para iconos extra junto a Video */
+  --icon-patreon-size: 20px; /* tamaño del icono de Patreon */
+  --icon-qr-size: 18px;      /* tamaño del icono de QR */
+}
+.btn:hover {
+  background: #666;
+  transform: translateY(-2px);
+  box-shadow:
+    rgba(255,255,255, 0.18) 0 0 14px 2px,
+    rgba(255,255,255, 0.9) 0 0 0 1px,
+    rgba(0,0,0, 0.45) 0 10px 18px 0,
+    inset #333 0 0 0 2px,
+    inset rgba(255,255,255, 0.28) 0 0 0 3px;
+}
+.btn:active {
+  transform: translateY(0);
+  box-shadow:
+    rgba(255,255,255, 0.12) 0 0 8px 1px,
+    rgba(255,255,255, 0.8) 0 0 0 1px,
+    rgba(0,0,0, 0.4) 0 6px 12px 0,
+    inset #333 0 0 0 2px,
+    inset rgba(255,255,255, 0.22) 0 0 0 3px;
+}
+.btn:focus-visible {
+  outline: none;
+  box-shadow:
+    0 0 0 3px rgba(255,255,255, .15),
+    0 0 0 1px rgba(255,255,255, .9),
+    inset #333 0 0 0 2px,
+    inset rgba(255,255,255, 0.28) 0 0 0 3px;
+}
+
+/* ===== Base ===== */
+body {
+  /* Margen superior/inferior de la página. */
+  margin: 40px 0;
+  font-family: "Raleway", system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  /* Color de fondo general (cámbialo libremente). */
+  background-color: #0f050d;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Banner superior */
+.site-banner { width: 100%; display: block; height: var(--banner-height, 150px); overflow: hidden; }
+.site-banner img { width: 100%; height: 100%; display: block; object-fit: cover; object-position: center; }
+
+/* Search bar */
+.search-bar { width: 100%; display: flex; justify-content: center; padding: 40px 0; }
+.search-input {
+  width: 200px;
+  height: 30px;
+  padding: 6px 10px;
+  border-radius: 8px;
+  border: 1px solid rgba(255,255,255,.18);
+  background: #121212;
+  color: #f0f0f0;
+  outline: none;
+  transition: border-color .15s ease, box-shadow .15s ease;
+}
+.search-input::placeholder { color: #9e9e9e; }
+.search-input:focus { border-color: #666; box-shadow: 0 0 0 3px rgba(255,255,255,.06); }
+
+.title {
+  font-family: "Raleway", system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  font-size: 24px;
+  font-weight: 700;
+  color: #5d4037;
+  text-align: center;
+}
+
+p { line-height: 1.5em; }
+h1 + p, p + p { margin-top: 10px; }
+
+/* ===== Cards ===== */
+.container {
+  /* Separación interior y distribución flexible de las cards. */
+  padding: 5px 40px 40px;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  /* Espacio entre cards (ajusta la densidad). */
+  gap: 20px;
+}
+
+.card-wrap {
+  /* Contenedor 3D: la perspectiva afecta la fuerza del efecto de inclinación.
+     Valores menores = efecto más fuerte; mayores = efecto más suave. */
+  margin: 10px;
+  transform: perspective(800px);
+  transform-style: preserve-3d;
+  cursor: pointer;
+}
+
+/* Estado expandido: mostrar por encima y reservar espacio para acciones */
+
+.card-wrap:hover .card-info {
+  /* Hace subir la banda de información en hover. */
+  transform: translateY(var(--info-hover-translate));
+  transition: 0.6s var(--hover-easing);
+}
+.card-wrap:hover .card-info p {
+  /* Hace visible el texto de la descripción. */
+  opacity: 1;
+  transition: 0.6s var(--hover-easing);
+}
+.card-wrap:hover .card-info:after {
+  /* Gradiente oscuro de fondo para legibilidad del texto. */
+  transition: 5s var(--hover-easing);
+  opacity: 1;
+  transform: translateY(0);
+}
+  .scene {
+    display: block;
+    margin: 5px 0; /* Espaciado vertical consistente con métricas */
+    /* Personaliza la escena: fuente y tamaño */
+    font-family: "Raleway", system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+    font-size: 12px; /* <- cambia tamaño del texto de escena */
+    font-weight: 600;
+    color: #e0e0e0;
+    opacity: .95;
+    transform: translateY(var(--scene-offset-y)); /* control en :root */
+  }
+
+  /* Las métricas aparecen sólo en hover; por defecto ocultas */
+  .metrics { opacity: 0; transition: opacity .35s var(--hover-easing); }
+  .card-wrap:hover .metrics { opacity: 1; }
+
+  /* Asegura que el párrafo de métricas no añada espacio extra inesperado */
+  .card-info p { margin: 16px 0 0; }
+  .card-info h1 {
+    margin: 0;
+    transform: translateY(var(--title-offset-y)); /* control en :root */
+  }
+.card-wrap:hover .card-bg {
+  /* La imagen de fondo se vuelve un poco más visible en hover. */
+  transition: 0.6s var(--hover-easing), opacity 1s var(--hover-easing);
+  opacity: 0.8;
+}
+.card-wrap:hover .card {
+  /* Sombras adicionales al hacer hover (brillo/borde interior). */
+  transition: 0.6s var(--hover-easing), box-shadow 2s var(--hover-easing);
+  box-shadow:
+    rgba(255,255,255, 0.2) 0 0 40px 5px,
+    rgba(255,255,255, 1) 0 0 0 1px,
+    rgba(0,0,0, 0.66) 0 30px 60px 0,
+    inset #333 0 0 0 5px,
+    inset #fff 0 0 0 6px;
+}
+
+.card {
+  /* Tamaño base de la tarjeta: cámbialo según tus necesidades. */
+  position: relative;
+  flex: 0 0 240px;
+  width: 240px;
+  height: 320px;
+  /* Color de respaldo si no carga la imagen. */
+  background-color: #333;
+  overflow: hidden; /* recorta cualquier desbordamiento de .card-info/.card-bg */
+  /* Redondeo de esquinas. */
+  border-radius: 10px;
+  /* Sombras base (exterior + bordes internos sutiles). */
+  box-shadow:
+    rgba(0,0,0, 0.66) 0 30px 60px 0,
+    inset #333 0 0 0 5px,
+    inset rgba(255,255,255, 0.5) 0 0 0 6px;
+  /* Velocidad de retorno al soltar el hover. */
+  transition: 0.2s var(--return-easing);  /* valor inicial 1s */
+  /* Sugerencia al navegador para optimizar transformaciones. */
+  will-change: transform;
+}
+
+/* Overlay de bloqueo sobre la card */
+.lock-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 4;
+  pointer-events: none; /* deja pasar el click al contenedor para abrir prompt */
+}
+.lock-icon { width: 42px; height: 42px; opacity: .95; filter: drop-shadow(0 2px 6px rgba(0,0,0,.6)); }
+
+/* ===== Utilidades: Botones y Controles ===== */
+.btn {
+  font-family: "Raleway", system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  font-size: 12px;
+  padding: 8px 12px;
+  border-radius: 6px;
+  border: 1px solid rgba(255,255,255,.25);
+  background: rgba(0,0,0,.6);
+  color: #fff;
+  text-decoration: none;
+  cursor: pointer;
+}
+.btn:hover { background: rgba(0,0,0,.75); }
+.btn-patreon { border-color: #ff6b6b; }
+.btn-qr { border-color: #80cbc4; }
+
+/* ===== Galería ===== */
+.gallery-panel {
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 10px;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
+  min-block-size: 200px;
+}
+.gallery-grid {
+  --thumb-size: 96px;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
+}
+.gallery-item {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  background: #654321; /* placeholder marrón */
+  border-radius: 8px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.gallery-item img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  image-rendering: auto;
+}
+.gallery-controls {
+  margin-top: auto;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  justify-content: center;
+}
+/* slider eliminado */
+
+/* ===== Modal ===== */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  pointer-events: auto;
+}
+.modal-overlay[style*="display: none"],
+.modal-overlay[aria-hidden="true"] {
+  pointer-events: none !important;
+}
+.modal-dialog {
+  width: min(980px, 92vw);
+  max-height: 92vh;
+  background: #1f1f1f;
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 12px;
+  box-shadow: 0 20px 60px rgba(0,0,0,.5);
+  overflow: hidden;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  pointer-events: auto;
+}
+.modal-close {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  font-size: 22px;
+  line-height: 1;
+  background: transparent;
+  color: #ddd;
+  border: 0;
+  cursor: pointer;
+  z-index: 2;
+  width: 32px;
+  height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+}
+.modal-close:hover { background: rgba(255,255,255,0.06); }
+.modal-body {
+  display: grid;
+  grid-template-columns: 520px 1fr;
+  gap: 16px;
+  padding: 16px;
+  flex: 1 1 auto;
+  min-height: 0;
+}
+.modal-left { display: flex; flex-direction: column; gap: 10px; min-height: 0; }
+.modal-right { display: flex; flex-direction: column; min-height: 0; overflow: hidden; }
+.modal-image { position: relative; border-radius: 10px; overflow: hidden; max-height: 60vh; }
+.modal-image img { display: block; width: 100%; height: auto; }
+.modal-image-info {
+  position: absolute; left: 0; right: 0; bottom: 0; padding: 16px;
+  background: linear-gradient(to top, rgba(0,0,0,.6), rgba(0,0,0,0));
+}
+.modal-image-info.top-left { position: absolute; left: 0; top: 0; right: auto; bottom: auto; padding: 12px 14px; background: linear-gradient(to bottom, rgba(0,0,0,.55), rgba(0,0,0,0)); }
+.modal-title { font-size: 22px; font-weight: 800; color: #fff; text-shadow: rgba(0,0,0,.6) 0 2px 6px; }
+.modal-scene { font-size: 13px; color: #ddd; opacity: .95; }
+.modal-actions { display:flex; gap: 10px; align-items: center; }
+.modal-actions .push-right { margin-left: auto; }
+
+.card-bg {
+  /* Capa de imagen de fondo que se traslada (parallax) con el mouse.
+     El -20px + padding asegura que al mover la imagen no queden bordes vacíos. */
+  opacity: 0.7;
+  position: absolute;
+  top: -20px;
+  left: -20px;
+  width: calc(100% + 40px);
+  height: calc(100% + 40px);
+  padding: 20px;
+  background-repeat: no-repeat;
+  /* Encuadre inicial de la imagen dentro de la card.
+     Formato: background-position: X% Y%
+       - X% (horizontal): 0% = izquierda, 50% = centro, 100% = derecha
+       - Y% (vertical): 0% = arriba, 50% = centro, 100% = abajo
+     Este valor prioriza la parte superior (5%) y algo a la derecha (75%).
+     Más parte superior: baja Y% (por ejemplo, 0% o 10%).
+     Centrar horizontalmente: usa 50%.
+  */
+  background-position: 75% 5%;
+  background-size: cover;
+  /* Transiciones suaves al cambiar opacidades/posiciones. */
+  transition: 1s var(--return-easing), opacity 5s 1s var(--return-easing);
+  pointer-events: none;
+}
+
+.card-info {
+  /* Banda inferior que contiene título y texto. */
+  padding: 20px;
+  position: absolute;
+  bottom: 0;
+  left: 0;   /* Asegura ocupar todo el ancho de la card */
+  right: 0;  /* en lugar de encoger al ancho del texto */
+  width: 100%;
+  display: block;
+  box-sizing: border-box; /* para que el padding no desborde el ancho */
+  color: #fff;
+  /* Desplazamiento inicial hacia abajo; controlado por variable */
+  transform: translateY(var(--info-initial-translate));
+  transition: 0.6s 1.6s cubic-bezier(0.215, 0.61, 0.355, 1);
+}
+
+.card-info p {
+  /* El texto aparece con fade en hover. */
+  opacity: 0;
+  text-shadow: rgba(0,0,0, 1) 0 2px 3px;
+  transition: 0.6s 1.6s cubic-bezier(0.215, 0.61, 0.355, 1);
+}
+
+
+/* Botón de Play para alternar GIF */
+.play-btn {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 3;
+  width: var(--icon-play-hit-size);
+  height: var(--icon-play-hit-size);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: 999px; /* círculo perfecto */
+  background: transparent; /* sin borde/gradiente, lo define el svg */
+  box-shadow: none; /* sin sombra para no simular borde */
+  cursor: pointer;
+  outline: none;
+  /* Oculto por defecto; aparece en hover */
+  opacity: 0; /* invisible pero mantiene el hitbox para hover directo */
+  pointer-events: auto; /* permite hover/click directo sobre el área del botón */
+  transition: transform .12s ease-out, background .15s ease-out, opacity .12s ease-out;
+}
+.card-wrap:hover .play-btn { opacity: 1; pointer-events: auto; }
+.play-btn:hover { opacity: 1; transform: translate(-50%, -50%) scale(1.05); background: rgba(0,0,0,.6); }
+.play-btn:active { transform: translate(-50%, -50%) scale(0.98); }
+
+.play-icon {
+  width: var(--icon-play-size);
+  height: var(--icon-play-size);
+  display: block;
+  pointer-events: none; /* asegura que el click siempre lo reciba el botón */
+}
+
+/* =======================
+   Métricas (icono + número)
+   - Cambia la fuente/tamaño/posición de los números aquí
+   ======================= */
+.metrics {
+  display: inline-flex;
+  gap: 14px; /* separación entre fotos y videos */
+  align-items: center;
+  transform: translateY(var(--metrics-offset-y)); /* control en :root */
+}
+
+/* Ajustes de elevación extra en hover (opcional) */
+.card-wrap:hover .scene { transform: translateY(calc(var(--scene-offset-y) + var(--scene-hover-extra))); }
+.card-wrap:hover .card-info h1 { transform: translateY(calc(var(--title-offset-y) + var(--title-hover-extra))); }
+.card-wrap:hover .metrics { transform: translateY(calc(var(--metrics-offset-y) + var(--metrics-hover-extra))); }
+
+.metric {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px; /* separación icono-número */
+}
+
+.metric-icon { display: inline-block; }
+
+/* Control separado por icono: cambia estas variables o los valores directos */
+.metric-icon--photo {
+  width: var(--icon-photo-size);
+  height: var(--icon-photo-size);
+}
+.metric-icon--video {
+  width: var(--icon-video-size);
+  height: var(--icon-video-size);
+}
+
+/* Iconos adicionales junto al video: Patreon + QR */
+.metric-icon--patreon {
+  width: var(--icon-patreon-size);
+  height: var(--icon-patreon-size);
+}
+.metric-icon--qr {
+  width: var(--icon-qr-size);
+  height: var(--icon-qr-size);
+}
+
+/* Contenedor de iconos extra a la derecha del conteo de videos */
+
+.metric-value {
+  /* Cambia la fuente de los números a tu preferencia: */
+  font-family: "Roboto", system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; /* <- cambia aquí la fuente */
+  font-weight: 500; /* grosor del número */
+  font-size: 14px; /* <- cambia aquí el tamaño del número */
+  line-height: 1;
+  letter-spacing: .3px;
+  /* Para ajustar la posición vertical, usa translateY: */
+  /* transform: translateY(1px); */
+}
+.card-info * { position: relative; z-index: 1; }
+
+.card-info:after {
+  /* Gradiente superpuesto detrás del texto para mejorar la legibilidad.
+     Ajusta los colores/stop para hacerlo más/menos oscuro. */
+  content: "";
+  position: absolute;
+  inset: 0; /* Ocupa todo el ancho y alto del contenedor .card-info */
+  z-index: 0;
+  background-image: linear-gradient(
+    to bottom,
+    rgba(0,0,0, 0) 0%,
+    rgba(0,0,0, 0.6) 100%
+  );
+  background-blend-mode: overlay;
+  opacity: 0;
+  transform: translateY(100%);
+  transition: 5s 1s var(--return-easing);
+}
+
+/* 5. Moderna y futurista */
+.card-info h1 {
+  font-family: "Raleway", Verdana, sans-serif;
+  font-size: 18px;
+  font-weight: 800;
+  text-shadow: rgba(0,0,0,0.5) 0 10px 10px;
+}
+
+/* Modal styles */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.85);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal-dialog {
+  position: relative;
+  background: #2d2d2d;
+  border-radius: 12px;
+  width: 1170px; /* 30% más grande que 900px */
+  height: 780px; /* 30% más grande que 600px */
+  overflow: hidden;
+  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.7);
+}
+
+.modal-close {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  background: rgba(0, 0, 0, 0.8);
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  cursor: pointer;
+  font-size: 18px;
+  z-index: 1001;
+  transition: background 0.2s;
+}
+
+.modal-close:hover {
+  background: rgba(0, 0, 0, 1);
+}
+
+.modal-body {
+  display: flex;
+  height: 100%;
+}
+
+.modal-left {
+  flex: 0 0 455px; /* 30% más grande que 350px */
+  padding: 30px;
+  display: flex;
+  flex-direction: column;
+  background: #2d2d2d;
+}
+
+.modal-right {
+  flex: 1;
+  background: #404040;
+  padding: 30px;
+  border-left: 1px solid #555;
+}
+
+.modal-image {
+  flex: 1; /* Toma todo el espacio disponible */
+  position: relative;
+  margin-bottom: 20px;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #1a1a1a;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal-image img {
+  max-width: 100%;
+  max-height: 100%;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  border-radius: 8px;
+}
+
+.modal-image-info {
+  position: absolute;
+  top: 15px;
+  left: 15px;
+  background: rgba(0, 0, 0, 0.8);
+  padding: 12px 16px;
+  border-radius: 6px;
+  color: white;
+}
+
+.modal-title {
+  font-weight: bold;
+  font-size: 16px;
+  margin-bottom: 4px;
+  color: #fff;
+}
+
+.modal-scene {
+  font-size: 12px;
+  color: #ccc;
+}
+
+.modal-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: auto;
+}
+
+.btn {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  text-decoration: none;
+  display: inline-block;
+  color: white;
+  background: #555;
+  font-size: 14px;
+  transition: background 0.2s;
+  flex: 1;
+  text-align: center;
+}
+
+.btn:hover {
+  background: #666;
+}
+
+.btn-qr {
+  background: #4a4a4a;
+}
+
+.btn-qr:hover {
+  background: #5a5a5a;
+}
+
+.btn-patreon {
+  background: #ff6b47;
+}
+
+.btn-patreon:hover {
+  background: #ff5533;
+}
+
+/* Gallery Panel */
+.gallery-header {
+  color: #fff;
+  font-size: 18px;
+  font-weight: 600;
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+.gallery-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  height: calc(100% - 60px);
+  overflow-y: auto;
+  padding: 5px;
+}
+
+.gallery-item {
+  aspect-ratio: 1;
+  background: #D2691E;
+  border-radius: 8px;
+  border: 2px solid #B8860B;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.gallery-item:hover {
+  transform: scale(1.05);
+}
+
+.gallery-item img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain; /* Show full image without cropping */
+  border-radius: 6px;
+  background: #222; /* Background for letterboxing */
+}
+
+.gallery-placeholder {
+  grid-column: 1 / -1;
+  text-align: center;
+  color: #888;
+  padding: 60px 20px;
+  font-size: 14px;
+}
+
+/* Full-screen image viewer */
+.image-viewer {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.95);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+  user-select: none;
+}
+
+.image-viewer img {
+  max-width: 90%;
+  max-height: 90%;
+  object-fit: contain;
+  cursor: grab;
+  transition: transform 0.2s ease;
+}
+
+.image-viewer img:active {
+  cursor: grabbing;
+}
+
+.image-viewer-controls {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  display: flex;
+  gap: 10px;
+}
+
+.image-viewer-nav {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background: rgba(0, 0, 0, 0.7);
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 50px;
+  height: 50px;
+  cursor: pointer;
+  font-size: 20px;
+  transition: background 0.2s;
+}
+
+.image-viewer-nav:hover {
+  background: rgba(0, 0, 0, 0.9);
+}
+
+.image-viewer-nav.prev {
+  left: 20px;
+}
+
+.image-viewer-nav.next {
+  right: 20px;
+}
+
+.image-viewer-btn {
+  background: rgba(0, 0, 0, 0.7);
+  color: white;
+  border: none;
+  border-radius: 5px;
+  padding: 8px 12px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.image-viewer-btn:hover {
+  background: rgba(0, 0, 0, 0.9);
+}
+
+.image-viewer-counter {
+  position: absolute;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0, 0, 0, 0.7);
+  color: white;
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-size: 14px;
+}
+
+.gallery-panel > div:first-child {
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #444;
+}
+
+/* Prompt de desbloqueo */
+.prompt-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1500;
+}
+.prompt-dialog {
+  width: auto;
+  min-width: 210px; /* 25% narrower */
+  max-width: 255px; /* 25% narrower */
+  background: #1f1f1f;
+  border: 1px solid rgba(255,255,255,.12);
+  border-radius: 12px;
+  padding: 12px;
+  color: #eee;
+  box-shadow: 0 18px 40px rgba(0,0,0,.55);
+  text-align: center;
+  transform: scale(1.125); /* reduced 25% from 1.5 */
+  transform-origin: center;
+  font-size: 70%; /* reduce base font size ~30% inside dialog */
+}
+.prompt-logo { display: flex; justify-content: center; margin-bottom: 8px; }
+.prompt-logo-bg { width: 36px; height: 36px; border-radius: 8px; background: transparent; display: inline-flex; align-items: center; justify-content: center; box-shadow: none; }
+.prompt-logo img { width: 24px; height: 24px; display: block; }
+.prompt-title { font-weight: 700; margin-bottom: 10px; font-size: 13px; }
+.prompt-desc { display: none; }
+.prompt-input {
+  width: 100%;
+  box-sizing: border-box;
+  margin: 0 auto;
+  padding: 10px 12px;
+  background: #121212;
+  color: #f7f7f7;
+  border: 1px solid #3a3a3a;
+  border-radius: 10px;
+  outline: none;
+  transition: border-color .15s ease, box-shadow .15s ease;
+  font-size: 11px;
+}
+.prompt-input:focus { border-color: #666; box-shadow: 0 0 0 3px rgba(255,255,255,.06); }
+.prompt-actions { display: flex; gap: 6px; justify-content: center; align-items: stretch; margin-top: 10px; width: 100%; }
+.prompt-actions .btn { flex: 1 1 0; min-width: 0; padding: 10px 12px; border-radius: 10px; background: #555; font-size: 11px; }
+
+/* ================================
+   Touch y responsividad de cards
+   ================================ */
+
+/* Dispositivos táctiles (sin hover) */
+@media (hover: none) and (pointer: coarse) {
+  /* Mostrar info/metrics/play sin necesidad de hover */
+  .card-info {
+    transform: translateY(var(--info-hover-translate));
+    transition: 0.3s var(--return-easing);
+  }
+  .card-info p { opacity: 1; transition: 0.3s var(--return-easing); }
+  .metrics { opacity: 1; }
+  .play-btn { opacity: 1; }
+
+  /* Tamaños y espacios cómodos para touch */
+  .container { gap: 14px; padding-inline: 16px; }
+  .card {
+    width: 44vw;
+    height: 58vw;
+    max-width: 280px;
+    max-height: 360px;
+    flex: 0 0 auto;
+  }
+}
+
+/* Breakpoints de tamaño para reflujo del grid */
+@media (max-width: 1200px) {
+  .card { width: 220px; height: 300px; flex: 0 0 220px; }
+}
+@media (max-width: 900px) {
+  .card { width: 200px; height: 280px; flex: 0 0 200px; }
+}
+@media (max-width: 700px) {
+  /* Dos columnas fluidas */
+  .card { width: auto; height: 58vw; max-height: 360px; flex: 1 1 calc(50% - 20px); }
+}
+@media (max-width: 420px) {
+  /* Una columna */
+  .container { padding: 5px 16px 32px; gap: 12px; }
+  .card { width: 100%; height: 70vw; max-height: 380px; flex: 1 1 100%; }
+}
+
+/* Accesibilidad: menos movimiento si el usuario lo prefiere */
+@media (prefers-reduced-motion: reduce) {
+  .card, .card-bg, .card-info, .play-btn {
+    transition: none !important;
+    animation: none !important;
+  }
+}
