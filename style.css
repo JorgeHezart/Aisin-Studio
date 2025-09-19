@@ -44,6 +44,11 @@
   /* Tamaños para iconos extra junto a Video */
   --icon-patreon-size: 20px; /* tamaño del icono de Patreon */
   --icon-qr-size: 18px;      /* tamaño del icono de QR */
+  
+  /* Variables faltantes usadas en reglas */
+  --icon-play-size: 28px;
+  --scene-offset-y: 0px;
+  --scene-hover-extra: -1px;
 }
 .btn:hover {
   background: #666;
@@ -81,7 +86,7 @@ body {
   font-size: 14px;
   font-weight: 500;
   /* Color de fondo general (cámbialo libremente). */
-  background-color: #d130b1;
+  background-color: #30d14b;
   -webkit-font-smoothing: antialiased;
 }
 
@@ -877,6 +882,10 @@ h1 + p, p + p { margin-top: 10px; }
     transition: 0.3s var(--return-easing);
   }
   .card-info p { opacity: 1; transition: 0.3s var(--return-easing); }
+  .card-info:after {
+    opacity: 1;
+    transform: translateY(0);
+  }
   .metrics { opacity: 1; }
   .play-btn { opacity: 1; }
 
@@ -901,11 +910,44 @@ h1 + p, p + p { margin-top: 10px; }
 @media (max-width: 700px) {
   /* Dos columnas fluidas */
   .card { width: auto; height: 58vw; max-height: 360px; flex: 1 1 calc(50% - 20px); }
+  
+  /* Forzar visibilidad en móvil */
+  .card-info {
+    transform: translateY(var(--info-hover-translate)) !important;
+  }
+  .card-info p { 
+    opacity: 1 !important; 
+  }
+  .card-info:after {
+    opacity: 1 !important;
+    transform: translateY(0) !important;
+  }
+  .metrics { 
+    opacity: 1 !important; 
+  }
+  .play-btn { 
+    opacity: 1 !important; 
+  }
 }
 @media (max-width: 420px) {
   /* Una columna */
   .container { padding: 5px 16px 32px; gap: 12px; }
   .card { width: 100%; height: 70vw; max-height: 380px; flex: 1 1 100%; }
+  
+  /* Asegurar visibilidad en móviles pequeños */
+  .card-info {
+    transform: translateY(var(--info-hover-translate)) !important;
+  }
+  .card-info p { 
+    opacity: 1 !important; 
+  }
+  .card-info:after {
+    opacity: 1 !important;
+    transform: translateY(0) !important;
+  }
+  .metrics { 
+    opacity: 1 !important; 
+  }
 }
 
 /* Accesibilidad: menos movimiento si el usuario lo prefiere */
