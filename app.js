@@ -25,13 +25,10 @@ Vue.component("card", {
       </div>
     </div>`,
   mounted() {
-    this.measure();
+    this.width = this.$refs.card.offsetWidth;
+    this.height = this.$refs.card.offsetHeight;
     // Si ya nos pasan un GIF verificado, úsalo como resuelto para alternar al instante
     if (this.gifImage) this.gifResolved = this.gifImage;
-    window.addEventListener('resize', this.measure, { passive: true });
-  },
-  beforeDestroy() {
-    window.removeEventListener('resize', this.measure);
   },
   props: ["dataImage", "gifImage", "unlocked"],
   data: () => ({
@@ -45,10 +42,10 @@ Vue.component("card", {
   }),
   computed: {
     mousePX() {
-      return this.width ? this.mouseX / this.width : 0;
+      return this.mouseX / this.width;
     },
     mousePY() {
-      return this.height ? this.mouseY / this.height : 0;
+      return this.mouseY / this.height;
     },
     cardStyle() {
       const rX = this.mousePX * 30;
@@ -73,13 +70,6 @@ Vue.component("card", {
     }
   },
   methods: {
-    measure() {
-      const el = this.$refs.card;
-      if (!el) return;
-      const rect = el.getBoundingClientRect();
-      this.width = rect.width;
-      this.height = rect.height;
-    },
     toggleGif() {
       // Alterna instantáneamente si hay GIF verificado
       if (!this.gifImage) return; // si no hay GIF disponible, nada que hacer
@@ -88,9 +78,8 @@ Vue.component("card", {
       this.isGif = !this.isGif;
     },
     handleMouseMove(e) {
-      const rect = this.$refs.card.getBoundingClientRect();
-      this.mouseX = e.clientX - rect.left - rect.width / 2;
-      this.mouseY = e.clientY - rect.top - rect.height / 2;
+      this.mouseX = e.pageX - this.$refs.card.offsetLeft - this.width / 2;
+      this.mouseY = e.pageY - this.$refs.card.offsetTop - this.height / 2;
     },
     handleMouseEnter() {
       clearTimeout(this.mouseLeaveDelay);
@@ -174,11 +163,9 @@ const app = new Vue({
             // Preparar propiedades reactivas para GIF
             gifCandidate: this.gifPath(norm(it.file)), // ruta tentativa
             gifFile: "", // se llenará si se verifica que existe
-            patreon: "", // se completará desde json/patreon_card_link.json si existe
+            patreon: "https://www.patreon.com/example", // Test patreon link to make button visible
             unlocked: false
           }));
-        // Intenta complementar enlaces de Patreon por ID
-        this.applyPatreonLinks();
         // Pre-carga y verificación de GIFs por cada card
         this.preloadGifs();
         // Revisar si existe codes_txt/<Nombre>.txt para auto-desbloquear (sólo si está habilitado)
@@ -190,21 +177,6 @@ const app = new Vue({
       });
   },
   methods: {
-    async applyPatreonLinks() {
-      try {
-        const r = await fetch('json/patreon_card_link.json', { cache: 'no-store' });
-        if (!r.ok) return;
-        const links = await r.json();
-        if (!links || typeof links !== 'object') return;
-        this.cards.forEach(c => {
-          const key = String(c.id || '').toUpperCase();
-          const url = links[key];
-          if (typeof url === 'string' && url.trim()) c.patreon = url.trim();
-        });
-      } catch (_) {
-        // Si no existe el archivo, ignorar silenciosamente
-      }
-    },
     async loadCodes() {
       try {
         const r = await fetch('assets/codes.plain.json', { cache: 'no-store' });
@@ -364,10 +336,9 @@ const app = new Vue({
         const cardComponents = Array.isArray(this.$refs.cards) ? this.$refs.cards : [this.$refs.cards];
         cardComponents.forEach(cardComponent => {
           if (cardComponent && cardComponent.$refs && cardComponent.$refs.card) {
-            // Recalculate dimensions using bounding rect
-            const rect = cardComponent.$refs.card.getBoundingClientRect();
-            cardComponent.width = rect.width;
-            cardComponent.height = rect.height;
+            // Recalculate dimensions
+            cardComponent.width = cardComponent.$refs.card.offsetWidth;
+            cardComponent.height = cardComponent.$refs.card.offsetHeight;
             // Reset mouse position to center (no transform)
             cardComponent.mouseX = 0;
             cardComponent.mouseY = 0;
