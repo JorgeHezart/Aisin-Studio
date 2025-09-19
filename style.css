@@ -44,6 +44,10 @@
   /* Tamaños para iconos extra junto a Video */
   --icon-patreon-size: 20px; /* tamaño del icono de Patreon */
   --icon-qr-size: 18px;      /* tamaño del icono de QR */
+  /* Variables faltantes usadas en reglas */
+  --icon-play-size: 28px;
+  --scene-offset-y: 0px;
+  --scene-hover-extra: -1px;
 }
 .btn:hover {
   background: #666;
