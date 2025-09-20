@@ -143,22 +143,9 @@ h1 + p, p + p { margin-top: 10px; }
 
 /* Estado expandido: mostrar por encima y reservar espacio para acciones */
 
-.card-wrap:hover .card-info {
-  /* Hace subir la banda de información en hover. */
-  transform: translateY(var(--info-hover-translate));
-  transition: 0.6s var(--hover-easing);
-}
-.card-wrap:hover .card-info p {
-  /* Hace visible el texto de la descripción. */
-  opacity: 1;
-  transition: 0.6s var(--hover-easing);
-}
-.card-wrap:hover .card-info:after {
-  /* Gradiente oscuro de fondo para legibilidad del texto. */
-  transition: 5s var(--hover-easing);
-  opacity: 1;
-  transform: translateY(0);
-}
+.card-wrap .card-info { transition: none; }
+.card-wrap .card-info p { opacity: 1; transition: none; }
+.card-wrap .card-info:after { opacity: 1; transform: translateY(0); transition: none; }
   .scene {
     display: block;
     margin: 5px 0; /* Espaciado vertical consistente con métricas */
@@ -168,24 +155,18 @@ h1 + p, p + p { margin-top: 10px; }
     font-weight: 600;
     color: #e0e0e0;
     opacity: .95;
-    transform: translateY(var(--scene-offset-y)); /* control en :root */
+    /* Colocar escena en la base y permitir animación en hover */
+    transform: translateY(0);
+    transition: transform .28s var(--hover-easing);
   }
 
-  /* Las métricas aparecen sólo en hover; por defecto ocultas */
-  .metrics { opacity: 0; transition: opacity .35s var(--hover-easing); }
-  .card-wrap:hover .metrics { opacity: 1; }
+  /* Métricas visibles siempre */
+  .metrics { opacity: 1; transition: none; }
 
   /* Asegura que el párrafo de métricas no añada espacio extra inesperado */
   .card-info p { margin: 16px 0 0; }
-  .card-info h1 {
-    margin: 0;
-    transform: translateY(var(--title-offset-y)); /* control en :root */
-  }
-.card-wrap:hover .card-bg {
-  /* La imagen de fondo se vuelve un poco más visible en hover. */
-  transition: 0.6s var(--hover-easing), opacity 1s var(--hover-easing);
-  opacity: 0.8;
-}
+  .card-info h1 { margin: 0; }
+/* Sin cambios de opacidad por hover para simplificar */
 .card-wrap:hover .card {
   /* Sombras adicionales al hacer hover (brillo/borde interior). */
   transition: 0.6s var(--hover-easing), box-shadow 2s var(--hover-easing);
@@ -401,17 +382,12 @@ h1 + p, p + p { margin-top: 10px; }
   display: block;
   box-sizing: border-box; /* para que el padding no desborde el ancho */
   color: #fff;
-  /* Desplazamiento inicial hacia abajo; controlado por variable */
-  transform: translateY(var(--info-initial-translate));
-  transition: 0.6s 1.6s cubic-bezier(0.215, 0.61, 0.355, 1);
+  /* Siempre visible */
+  transform: translateY(0);
+  transition: none;
 }
 
-.card-info p {
-  /* El texto aparece con fade en hover. */
-  opacity: 0;
-  text-shadow: rgba(0,0,0, 1) 0 2px 3px;
-  transition: 0.6s 1.6s cubic-bezier(0.215, 0.61, 0.355, 1);
-}
+.card-info p { opacity: 1; text-shadow: rgba(0,0,0, 1) 0 2px 3px; transition: none; }
 
 
 /* Botón de Play para alternar GIF */
@@ -460,9 +436,7 @@ h1 + p, p + p { margin-top: 10px; }
 }
 
 /* Ajustes de elevación extra en hover (opcional) */
-.card-wrap:hover .scene { transform: translateY(calc(var(--scene-offset-y) + var(--scene-hover-extra))); }
-.card-wrap:hover .card-info h1 { transform: translateY(calc(var(--title-offset-y) + var(--title-hover-extra))); }
-.card-wrap:hover .metrics { transform: translateY(calc(var(--metrics-offset-y) + var(--metrics-hover-extra))); }
+/* Sin elevaciones extra por hover */
 
 .metric {
   display: inline-flex;
@@ -530,6 +504,17 @@ h1 + p, p + p { margin-top: 10px; }
   font-size: 18px;
   font-weight: 800;
   text-shadow: rgba(0,0,0,0.5) 0 10px 10px;
+  /* Base en la parte inferior; animación en hover */
+  transform: translateY(0);
+  transition: transform .28s var(--hover-easing);
+}
+
+/* Solo en dispositivos con hover: elevar título y escena; iconos permanecen estáticos */
+@media (hover: hover) and (pointer: fine) {
+  .card-wrap:hover .card-info h1,
+  .card-wrap:hover .card-info .scene {
+    transform: translateY(-14px);
+  }
 }
 
 /* Modal styles */
@@ -958,92 +943,4 @@ h1 + p, p + p { margin-top: 10px; }
   }
 }
 
-/* ================================
-   MOBILE FIXES - Forzar visibilidad
-   ================================ */
-
-/* Para TODOS los dispositivos móviles y táctiles */
-@media screen and (max-width: 768px), (hover: none) {
-  /* Forzar que las cards sean visibles sin hover */
-  .card-info {
-    transform: translateY(0%) !important;
-    transition: none !important;
-  }
-  
-  .card-info p {
-    opacity: 1 !important;
-    transition: none !important;
-  }
-  
-  .card-info:after {
-    opacity: 1 !important;
-    transform: translateY(0%) !important;
-    transition: none !important;
-  }
-  
-  .metrics {
-    opacity: 1 !important;
-    transition: none !important;
-  }
-  
-  .play-btn {
-    opacity: 1 !important;
-    pointer-events: auto !important;
-  }
-  
-  /* Asegurar que las cards tengan tamaño mínimo */
-  .card {
-    min-width: 180px !important;
-    min-height: 240px !important;
-  }
-  
-  /* Contenedor más compacto */
-  .container {
-    padding: 10px !important;
-    gap: 15px !important;
-  }
-}
-
-/* Específicamente para móviles muy pequeños */
-@media screen and (max-width: 480px) {
-  .card {
-    width: calc(50vw - 20px) !important;
-    height: calc(65vw - 20px) !important;
-    max-width: 200px !important;
-    max-height: 280px !important;
-  }
-  
-  .card-info h1 {
-    font-size: 14px !important;
-  }
-  
-  .metric-value {
-    font-size: 12px !important;
-  }
-}
-
-/* Para una sola columna en pantallas muy pequeñas */
-@media screen and (max-width: 360px) {
-  .card {
-    width: calc(100vw - 40px) !important;
-    height: calc(80vw - 40px) !important;
-    max-width: 280px !important;
-    max-height: 320px !important;
-  }
-  
-  .container {
-    padding: 10px 20px !important;
-  }
-}
-
-/* Debug: Borde rojo temporal para ver si las cards existen */
-@media screen and (max-width: 768px) {
-  .card {
-    border: 2px solid red !important;
-    background-color: #444 !important;
-  }
-  
-  .card-info {
-    background-color: rgba(0,0,0,0.8) !important;
-  }
-}
+/* Eliminado bloque de fixes móviles y debug */

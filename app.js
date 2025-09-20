@@ -567,16 +567,3 @@ const app = new Vue({
     }
   }
 });
-
-// DEBUG: Mostrar info en pantalla para móvil
-setTimeout(() => {
-  const debugInfo = document.createElement('div');
-  debugInfo.style.cssText = 'position:fixed;top:10px;left:10px;background:red;color:white;padding:10px;z-index:9999;font-size:12px;max-width:300px;';
-  debugInfo.innerHTML = `
-    Cards: ${app.cards.length}<br>
-    URL: ${window.location.href}<br>
-    UserAgent: ${navigator.userAgent.substring(0,50)}<br>
-    Error: ${app.error || 'Ninguno'}
-  `;
-  document.body.appendChild(debugInfo);
-}, 2000);
