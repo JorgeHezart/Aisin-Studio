@@ -44,11 +44,6 @@
   /* Tamaños para iconos extra junto a Video */
   --icon-patreon-size: 20px; /* tamaño del icono de Patreon */
   --icon-qr-size: 18px;      /* tamaño del icono de QR */
-  
-  /* Variables faltantes usadas en reglas */
-  --icon-play-size: 28px;
-  --scene-offset-y: 0px;
-  --scene-hover-extra: -1px;
 }
 .btn:hover {
   background: #666;
@@ -86,7 +81,7 @@ body {
   font-size: 14px;
   font-weight: 500;
   /* Color de fondo general (cámbialo libremente). */
-  background-color: #30d14b;
+  background-color: #0f050d;
   -webkit-font-smoothing: antialiased;
 }
 
@@ -143,9 +138,22 @@ h1 + p, p + p { margin-top: 10px; }
 
 /* Estado expandido: mostrar por encima y reservar espacio para acciones */
 
-.card-wrap .card-info { transition: none; }
-.card-wrap .card-info p { opacity: 1; transition: none; }
-.card-wrap .card-info:after { opacity: 1; transform: translateY(0); transition: none; }
+.card-wrap:hover .card-info {
+  /* Hace subir la banda de información en hover. */
+  transform: translateY(var(--info-hover-translate));
+  transition: 0.6s var(--hover-easing);
+}
+.card-wrap:hover .card-info p {
+  /* Hace visible el texto de la descripción. */
+  opacity: 1;
+  transition: 0.6s var(--hover-easing);
+}
+.card-wrap:hover .card-info:after {
+  /* Gradiente oscuro de fondo para legibilidad del texto. */
+  transition: 5s var(--hover-easing);
+  opacity: 1;
+  transform: translateY(0);
+}
   .scene {
     display: block;
     margin: 5px 0; /* Espaciado vertical consistente con métricas */
@@ -155,18 +163,24 @@ h1 + p, p + p { margin-top: 10px; }
     font-weight: 600;
     color: #e0e0e0;
     opacity: .95;
-    /* Colocar escena en la base y permitir animación en hover */
-    transform: translateY(0);
-    transition: transform .28s var(--hover-easing);
+    transform: translateY(var(--scene-offset-y)); /* control en :root */
   }
 
-  /* Métricas visibles siempre */
-  .metrics { opacity: 1; transition: none; }
+  /* Las métricas aparecen sólo en hover; por defecto ocultas */
+  .metrics { opacity: 0; transition: opacity .35s var(--hover-easing); }
+  .card-wrap:hover .metrics { opacity: 1; }
 
   /* Asegura que el párrafo de métricas no añada espacio extra inesperado */
   .card-info p { margin: 16px 0 0; }
-  .card-info h1 { margin: 0; }
-/* Sin cambios de opacidad por hover para simplificar */
+  .card-info h1 {
+    margin: 0;
+    transform: translateY(var(--title-offset-y)); /* control en :root */
+  }
+.card-wrap:hover .card-bg {
+  /* La imagen de fondo se vuelve un poco más visible en hover. */
+  transition: 0.6s var(--hover-easing), opacity 1s var(--hover-easing);
+  opacity: 0.8;
+}
 .card-wrap:hover .card {
   /* Sombras adicionales al hacer hover (brillo/borde interior). */
   transition: 0.6s var(--hover-easing), box-shadow 2s var(--hover-easing);
@@ -382,12 +396,17 @@ h1 + p, p + p { margin-top: 10px; }
   display: block;
   box-sizing: border-box; /* para que el padding no desborde el ancho */
   color: #fff;
-  /* Siempre visible */
-  transform: translateY(0);
-  transition: none;
+  /* Desplazamiento inicial hacia abajo; controlado por variable */
+  transform: translateY(var(--info-initial-translate));
+  transition: 0.6s 1.6s cubic-bezier(0.215, 0.61, 0.355, 1);
 }
 
-.card-info p { opacity: 1; text-shadow: rgba(0,0,0, 1) 0 2px 3px; transition: none; }
+.card-info p {
+  /* El texto aparece con fade en hover. */
+  opacity: 0;
+  text-shadow: rgba(0,0,0, 1) 0 2px 3px;
+  transition: 0.6s 1.6s cubic-bezier(0.215, 0.61, 0.355, 1);
+}
 
 
 /* Botón de Play para alternar GIF */
@@ -436,7 +455,9 @@ h1 + p, p + p { margin-top: 10px; }
 }
 
 /* Ajustes de elevación extra en hover (opcional) */
-/* Sin elevaciones extra por hover */
+.card-wrap:hover .scene { transform: translateY(calc(var(--scene-offset-y) + var(--scene-hover-extra))); }
+.card-wrap:hover .card-info h1 { transform: translateY(calc(var(--title-offset-y) + var(--title-hover-extra))); }
+.card-wrap:hover .metrics { transform: translateY(calc(var(--metrics-offset-y) + var(--metrics-hover-extra))); }
 
 .metric {
   display: inline-flex;
@@ -504,17 +525,6 @@ h1 + p, p + p { margin-top: 10px; }
   font-size: 18px;
   font-weight: 800;
   text-shadow: rgba(0,0,0,0.5) 0 10px 10px;
-  /* Base en la parte inferior; animación en hover */
-  transform: translateY(0);
-  transition: transform .28s var(--hover-easing);
-}
-
-/* Solo en dispositivos con hover: elevar título y escena; iconos permanecen estáticos */
-@media (hover: hover) and (pointer: fine) {
-  .card-wrap:hover .card-info h1,
-  .card-wrap:hover .card-info .scene {
-    transform: translateY(-14px);
-  }
 }
 
 /* Modal styles */
@@ -867,10 +877,6 @@ h1 + p, p + p { margin-top: 10px; }
     transition: 0.3s var(--return-easing);
   }
   .card-info p { opacity: 1; transition: 0.3s var(--return-easing); }
-  .card-info:after {
-    opacity: 1;
-    transform: translateY(0);
-  }
   .metrics { opacity: 1; }
   .play-btn { opacity: 1; }
 
@@ -895,44 +901,11 @@ h1 + p, p + p { margin-top: 10px; }
 @media (max-width: 700px) {
   /* Dos columnas fluidas */
   .card { width: auto; height: 58vw; max-height: 360px; flex: 1 1 calc(50% - 20px); }
-  
-  /* Forzar visibilidad en móvil */
-  .card-info {
-    transform: translateY(var(--info-hover-translate)) !important;
-  }
-  .card-info p { 
-    opacity: 1 !important; 
-  }
-  .card-info:after {
-    opacity: 1 !important;
-    transform: translateY(0) !important;
-  }
-  .metrics { 
-    opacity: 1 !important; 
-  }
-  .play-btn { 
-    opacity: 1 !important; 
-  }
 }
 @media (max-width: 420px) {
   /* Una columna */
   .container { padding: 5px 16px 32px; gap: 12px; }
   .card { width: 100%; height: 70vw; max-height: 380px; flex: 1 1 100%; }
-  
-  /* Asegurar visibilidad en móviles pequeños */
-  .card-info {
-    transform: translateY(var(--info-hover-translate)) !important;
-  }
-  .card-info p { 
-    opacity: 1 !important; 
-  }
-  .card-info:after {
-    opacity: 1 !important;
-    transform: translateY(0) !important;
-  }
-  .metrics { 
-    opacity: 1 !important; 
-  }
 }
 
 /* Accesibilidad: menos movimiento si el usuario lo prefiere */
@@ -942,5 +915,3 @@ h1 + p, p + p { margin-top: 10px; }
     animation: none !important;
   }
 }
-
-/* Eliminado bloque de fixes móviles y debug */
